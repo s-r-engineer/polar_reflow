@@ -17,3 +17,8 @@ type PpiSamples struct {
 	TimeWithPulse  time.Time
 	PulseLength    int `json:"pulseLength"`
 }
+
+type PPIFromInflux struct {
+	Value float64
+	TimePoint time.Time
+}

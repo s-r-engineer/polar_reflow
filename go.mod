@@ -3,6 +3,7 @@ module polar_reflow
 go 1.23.1
 
 require (
+	github.com/davecgh/go-spew v1.1.1
 	github.com/gin-gonic/gin v1.10.0
 	github.com/influxdata/influxdb-client-go/v2 v2.14.0
 	golang.org/x/sync v0.8.0

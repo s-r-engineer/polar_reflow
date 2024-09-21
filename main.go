@@ -14,6 +14,7 @@ import (
 
 var (
 	pathToFindFilesIn         = flag.String("path", "", "")
+	serve                     = flag.Bool("serve", true, "")
 	reinit                    = flag.Bool("reinit", false, "")
 	influxAddress             = flag.String("influx", "http://localhost:8086", "")
 	excludeRmssd              = flag.Bool("normssd", false, "")
@@ -30,7 +31,6 @@ var (
 
 func main() {
 	flag.Parse()
-	go mygin.Run()
 	influxclient.InitInflux(*influxAddress, *token, *org, *bucket)
 	if *reinit {
 		influxclient.ReinitBucket()
@@ -38,6 +38,11 @@ func main() {
 	}
 	if *pathToFindFilesIn != "" {
 		importData.ImportFiles(*pathToFindFilesIn)
+		return
+	}
+	if *serve {
+		mygin.Run()
+		return
 	}
 
 	fmt.Println("Starting calculations")
