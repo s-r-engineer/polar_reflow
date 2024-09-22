@@ -72,10 +72,11 @@ func CreateLinker(excludeSddn, excludeRmssd bool, startTime, endTime time.Time, 
 			minutesLeft := timePeriod % 60
 			clearDays := clearHours / 24
 			hoursLeft := clearHours % 24
+			offset := time.Duration(timePeriod) * time.Minute
 			timeTagLine := fmt.Sprintf("%d%s%d%s%d%s", clearDays, "d", hoursLeft, "h", minutesLeft, "m")
-			for timeCounter := startTime; timeCounter.UnixMilli() < endTime.UnixMilli(); timeCounter = timeCounter.Add(time.Duration(timePeriod) * time.Minute) {
+			for timeCounter := startTime; timeCounter.Before(endTime); timeCounter = timeCounter.Add(offset) {
 				Push([]string{
-					method, timeTagLine, tools.FormatTime(timeCounter), tools.FormatTime(timeCounter.Add(time.Duration(timePeriod) * time.Minute)),
+					method, timeTagLine, tools.FormatTime(timeCounter), tools.FormatTime(timeCounter.Add(offset)),
 				})
 			}
 		}
