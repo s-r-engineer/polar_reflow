@@ -128,7 +128,8 @@ func Get5MinRMSSDFromtimeToTime(t1, t2 time.Time) []models.PPIFromInflux {
 		r := RMSSD(v)
 		resultPoints = append(resultPoints, models.PPIFromInflux{Value: r, TimePoint: v[len(v)-1].TimePoint})
 	}
-	tools.Dumper(resultPoints[0])
-
+	sort.Slice(resultPoints, func(i, j int) bool {
+		return resultPoints[i].TimePoint.Before(resultPoints[j].TimePoint)
+	})
 	return resultPoints
 }
