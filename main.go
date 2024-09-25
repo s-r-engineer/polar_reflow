@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 	"polar_reflow/hrv"
 	importData "polar_reflow/import"
 	influxclient "polar_reflow/influxClient"
@@ -13,15 +14,15 @@ import (
 )
 
 var (
-	pathToFindFilesIn         = flag.String("path", "", "")
-	serve                     = flag.Bool("serve", true, "")
-	reinit                    = flag.Bool("reinit", false, "")
-	influxAddress             = flag.String("influx", "http://localhost:8086", "")
-	excludeRmssd              = flag.Bool("normssd", false, "")
-	excludeSddn               = flag.Bool("nosddn", false, "")
-	token                     = flag.String("token", "", "")
-	org                       = flag.String("org", "my", "")
-	bucket                    = flag.String("bucket", "user", "")
+	pathToFindFilesIn         = flag.String("path", os.Getenv("POLAR_REFLOW_PATH"), "")
+	serve                     = flag.Bool("serve", "true" == os.Getenv("POLAR_REFLOW_SERVE"), "")
+	reinit                    = flag.Bool("reinit", "true" == os.Getenv("POLAR_REFLOW_REINIT"), "")
+	influxAddress             = flag.String("influx", "http://influx:8086", "")
+	excludeRmssd              = flag.Bool("normssd", "true" == os.Getenv("POLAR_REFLOW_NORMSSD"), "")
+	excludeSddn               = flag.Bool("nosddn", "true" == os.Getenv("POLAR_REFLOW_NOSDDN"), "")
+	token                     = flag.String("token", os.Getenv("POLAR_REFLOW_TOKEN"), "")
+	org                       = flag.String("org", os.Getenv("POLAR_REFLOW_ORG"), "")
+	bucket                    = flag.String("bucket", os.Getenv("POLAR_REFLOW_BUCKET"), "")
 	startTimeString           = flag.String("start", "2020-01-01T00:00:00Z", "")
 	finaltime                 = flag.String("end", time.Now().Format("2006-01-02T15:04:05Z"), "")
 	parallelismForCalculating = flag.Int("paralel", 16, "")
