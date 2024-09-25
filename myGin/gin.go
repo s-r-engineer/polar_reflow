@@ -17,7 +17,10 @@ func Run() {
 	engine.PUT("/upload_data", func(ctx *gin.Context) {})
 	engine.GET("/hrv/last5min", getRealHRVRMSSD)
 	engine.GET("/hrv/5minforperiod", getRealHRVRMSSDMinByMin)
-	engine.Run("localhost:6969")
+	engine.GET("/ping", func(ctx *gin.Context) {
+		ctx.Status(http.StatusOK)
+	})
+	engine.Run(":6969")
 }
 
 func auth(ctx *gin.Context) {
