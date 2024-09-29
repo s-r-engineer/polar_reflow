@@ -29,18 +29,20 @@
         "fieldConfig": {
           "defaults": {
             "color": {
-              "mode": "palette-classic"
+              "fixedColor": "dark-red",
+              "mode": "fixed"
             },
             "custom": {
               "axisBorderShow": false,
               "axisCenteredZero": false,
-              "axisColorMode": "text",
+              "axisColorMode": "series",
+              "axisGridShow": false,
               "axisLabel": "",
               "axisPlacement": "auto",
               "barAlignment": 0,
               "barWidthFactor": 0.6,
               "drawStyle": "line",
-              "fillOpacity": 0,
+              "fillOpacity": 16,
               "gradientMode": "none",
               "hideFrom": {
                 "legend": false,
@@ -48,13 +50,16 @@
                 "viz": false
               },
               "insertNulls": false,
-              "lineInterpolation": "linear",
+              "lineInterpolation": "stepAfter",
+              "lineStyle": {
+                "fill": "solid"
+              },
               "lineWidth": 1,
               "pointSize": 5,
               "scaleDistribution": {
                 "type": "linear"
               },
-              "showPoints": "auto",
+              "showPoints": "never",
               "spanNulls": false,
               "stacking": {
                 "group": "A",
@@ -64,22 +69,30 @@
                 "mode": "off"
               }
             },
+            "decimals": 3,
+            "fieldMinMax": false,
             "mappings": [],
+            "min": 0,
             "thresholds": {
               "mode": "absolute",
               "steps": [
                 {
                   "color": "green",
                   "value": null
-                },
-                {
-                  "color": "red",
-                  "value": 80
                 }
               ]
-            }
+            },
+            "unit": "none"
           },
-          "overrides": []
+          "overrides": [
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "TimePoint"
+              },
+              "properties": []
+            }
+          ]
         },
         "gridPos": {
           "h": 23,
@@ -93,7 +106,7 @@
             "calcs": [],
             "displayMode": "list",
             "placement": "bottom",
-            "showLegend": true
+            "showLegend": false
           },
           "tooltip": {
             "mode": "single",
@@ -106,8 +119,8 @@
               {
                 "selector": "TimePoint",
                 "text": "TimePoint",
-                "timestampFormat": "2006-01-02T15:04:05Z07:00",
-                "type": "timestamp"
+                "timestampFormat": "2006-01-02T15:04:05.999999999Z07:00",
+                "type": "timestamp_epoch"
               },
               {
                 "selector": "Value",
@@ -115,6 +128,7 @@
                 "type": "number"
               }
             ],
+            "computed_columns": [],
             "datasource": {
               "type": "yesoreyeram-infinity-datasource",
               "uid": "cdyz9gotagfeoc"
@@ -145,6 +159,7 @@
           }
         ],
         "title": "HRV",
+        "transparent": true,
         "type": "timeseries"
       }
     ],
@@ -155,8 +170,8 @@
       "list": []
     },
     "time": {
-      "from": "2024-07-15T09:52:59.941Z",
-      "to": "2024-08-03T06:47:11.554Z"
+      "from": "2024-09-04T08:00:26.153Z",
+      "to": "2024-09-04T11:46:04.615Z"
     },
     "timepicker": {},
     "timezone": "browser",

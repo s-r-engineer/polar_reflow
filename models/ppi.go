@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type PPI []struct {
 	Date                 string                 `json:"date"`
@@ -18,7 +20,7 @@ type PpiSamples struct {
 	PulseLength    int `json:"pulseLength"`
 }
 
-type PPIFromInflux struct {
-	Value float64
-	TimePoint time.Time
+type DBPPI struct {
+	Value     float64
+	TimePoint time.Time `bson:"timePoint"`
 }

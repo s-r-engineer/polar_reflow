@@ -8,6 +8,9 @@ import (
 	"path/filepath"
 	influxclient "polar_reflow/influxClient"
 	"polar_reflow/logger"
+
+	"polar_reflow/database"
+
 	"polar_reflow/models"
 	"polar_reflow/syncronization"
 	"regexp"
@@ -20,7 +23,7 @@ func ImportFiles(pathToLookIn string) {
 	logger.Error(err.Error())
 	aqquire, release := syncronization.CreateSemaphoreInstance(4)
 	add, done, wait := syncronization.CreateWGInstance()
-	err = filepath.WalkDir(absPath, func(path string, d fs.DirEntry, err error) error {
+	tools.ErrPanic(filepath.WalkDir(absPath, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -36,7 +39,7 @@ func ImportFiles(pathToLookIn string) {
 	wait()
 	logger.Info("flushing data")
 
-	influxclient.Flush()
+	database.Flush()
 }
 
 func importFile(path string, aqquire func() error, release, add, done func()) error {
@@ -69,7 +72,7 @@ func importFile(path string, aqquire func() error, release, add, done func()) er
 			for _, DevicePpiSamplesList12 := range pp.DevicePpiSamplesList {
 				for _, sample := range DevicePpiSamplesList12.PpiSamples {
 					sampleTime := time.Time(sample.SampleDateTime)
-					influxclient.WritePPIPoint(DevicePpiSamplesList12.DeviceID, sample.PulseLength, sampleTime)
+					database.Write(models.DBPPI{Value: float64(sample.PulseLength), TimePoint: sampleTime})
 				}
 			}
 		}

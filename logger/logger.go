@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 package logger
 
 import (
@@ -42,4 +43,18 @@ func LoggerForGin(c *gin.Context) {
 		zap.String("client_ip", c.ClientIP()),
 		zap.Duration("latency", end.Sub(start)),
 	)
+=======
+package main
+
+import (
+	"go.uber.org/zap"
+)
+
+func main() {
+	logger, _ := zap.NewDevelopment()
+	config := zap.NewDevelopmentConfig()
+	config.Encoding
+	defer logger.Sync()
+	logger.Info("failed to fetch URL")
+>>>>>>> d686776 (wip)
 }

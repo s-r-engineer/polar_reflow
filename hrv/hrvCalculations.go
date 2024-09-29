@@ -2,7 +2,8 @@ package hrv
 
 import (
 	"math"
-	influxclient "polar_reflow/influxClient"
+	"polar_reflow/database"
+	influxclient "polar_reflow/database/influxClient"
 	"polar_reflow/linker"
 	"polar_reflow/models"
 	"polar_reflow/syncronization"
@@ -12,7 +13,7 @@ import (
 	"time"
 )
 
-func RMSSD(rrIntervals []models.PPIFromInflux) float64 {
+func RMSSD(rrIntervals []models.DBPPI) float64 {
 	if len(rrIntervals) < 2 {
 		return 0
 	}
@@ -22,17 +23,18 @@ func RMSSD(rrIntervals []models.PPIFromInflux) float64 {
 		diff := rrIntervals[i].Value - rrIntervals[i-1].Value
 		sumSquares += diff * diff
 	}
-	rmssd := math.Sqrt(sumSquares / float64(len(rrIntervals)-1))
+
+	rmssd := math.Sqrt(float64(sumSquares) / float64(len(rrIntervals)-1))
 	return rmssd
 }
 
-func SDNN(pulseIntervals []models.PPIFromInflux) float64 {
+func SDNN(pulseIntervals []models.DBPPI) float64 {
 	n := float64(len(pulseIntervals))
 	if n == 0 {
 		return 0.0
 	}
 
-	var sum float64 = 0
+	var sum float64
 	for _, point := range pulseIntervals {
 		sum += point.Value
 	}
@@ -47,10 +49,10 @@ func SDNN(pulseIntervals []models.PPIFromInflux) float64 {
 	return sdnn
 }
 
-func hrvWorker(done func()) {
+func hrvWorker(done func(), pop func() (any, func())) {
 	defer done()
 	for {
-		optionInterface, _ := linker.Pop()
+		optionInterface, _ := pop()
 		if optionInterface == nil {
 			break
 		}
@@ -59,23 +61,12 @@ func hrvWorker(done func()) {
 		timeTag := option[1]
 		startTime := option[2]
 		endTime := option[3]
-		result := getValuesFromInflux(startTime, endTime)
+		result := database.GetWithTimeAsString(startTime, endTime)
 		createHRVPoint(method, startTime, timeTag, result)
 	}
 }
 
-func getValuesFromInflux(startTime, endTime string) (result []models.PPIFromInflux) {
-	queryResult := influxclient.QueryPPI(startTime, endTime)
-	for queryResult.Next() {
-		result = append(result, models.PPIFromInflux{Value: queryResult.Record().Value().(float64), TimePoint: queryResult.Record().Time()})
-	}
-	sort.Slice(result, func(i, j int) bool {
-		return result[i].TimePoint.Before(result[j].TimePoint)
-	})
-	return
-}
-
-func createHRVPoint(method string, startTimeS string, timeTag string, result []models.PPIFromInflux) {
+func createHRVPoint(method string, startTimeS string, timeTag string, result []models.DBPPI) {
 	var data float64
 	switch strings.ToLower(method) {
 	case "sdnn":
@@ -91,42 +82,43 @@ func createHRVPoint(method string, startTimeS string, timeTag string, result []m
 	}
 }
 
-func SpinHRVWorkers(parallelism int) {
+func SpinHRVWorkers(parallelism int, linker *linker.Linker) {
 	add, done, wait := syncronization.CreateWGInstance()
 	for range parallelism {
 		add()
-		go hrvWorker(done)
+		go hrvWorker(done, linker.Pop)
 	}
 	wait()
 }
 
 func Get5MinRMSSDFromPoint(t int) float64 {
 	timePoint := time.Unix(int64(t/1000), 0)
-	result := getValuesFromInflux(tools.FormatTime(timePoint.Add(time.Minute*-5)), tools.FormatTime(timePoint))
+	result := database.Get(timePoint.Add(time.Minute*-5), timePoint)
 	return RMSSD(result)
 }
 
-func Get5MinRMSSDFromtimeToTime(t1, t2 time.Time) []models.PPIFromInflux {
-	result := getValuesFromInflux(tools.FormatTime(t1), tools.FormatTime(t2))
-	minutes := make(map[int][]models.PPIFromInflux)
-	resultPoints := []models.PPIFromInflux{}
+func Get5MinRMSSDFromtimeToTime(t1, t2 time.Time) []models.DBPPI {
+	result := database.Get(t1, t2)
+	resultPoints := []models.DBPPI{}
 	if len(result) == 0 {
 		return resultPoints
 	}
+	minutes := make(map[int][]models.DBPPI)
 	startPoint := result[0].TimePoint
-
 	for _, pointInResult := range result {
 		currentPoint := int(pointInResult.TimePoint.Sub(startPoint).Minutes())
-		for m := currentPoint; m > currentPoint-5 && m > 0; m-- {
+		for m := currentPoint + 1; m <= currentPoint+5; m++ {
 			if _, ok := minutes[m]; !ok {
-				minutes[m] = []models.PPIFromInflux{}
+				minutes[m] = []models.DBPPI{}
 			}
 			minutes[m] = append(minutes[m], pointInResult)
 		}
 	}
+
 	for _, v := range minutes {
 		if CheckAmountOfPoints(v, time.Duration(5*time.Minute)) {
-		r := RMSSD(v)
+			r := RMSSD(v)
+			resultPoints = append(resultPoints, models.DBPPI{Value: r, TimePoint: v[len(v)-1].TimePoint})
 		}
 	}
 	sort.Slice(resultPoints, func(i, j int) bool {

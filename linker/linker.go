@@ -1,14 +1,13 @@
 package linker
 
 import (
-	"fmt"
-	"polar_reflow/tools"
 	"sync"
-	"time"
 )
 
-var chain *Link
-var mutex sync.Mutex
+type Linker struct {
+	chain *Link
+	mutex sync.Mutex
+}
 
 type Link struct {
 	value interface{}
@@ -16,69 +15,50 @@ type Link struct {
 	prev  *Link
 }
 
-func LockMe() func() {
-	mutex.Lock()
+func (l *Linker) lockMe() func() {
+	l.mutex.Lock()
 	return func() {
-		mutex.Unlock()
+		l.mutex.Unlock()
 	}
 }
 
-func isEmpty() bool {
-	return chain == nil
+func (l *Linker) isEmpty() bool {
+	return l.chain == nil
 }
 
-func count() (counter int) {
-	defer LockMe()()
-	for l := chain.next; l != chain; l = l.next {
+func (l *Linker) count() (counter int) {
+	defer l.lockMe()()
+	for piece := l.chain.next; piece != l.chain; piece = piece.next {
 		counter += 1
 	}
 	return counter + 1
 }
 
-func Push(value interface{}) {
-	defer LockMe()()
+func (l *Linker) Push(value interface{}) {
+	defer l.lockMe()()
 	link := Link{value: value}
-	if isEmpty() {
+	if l.isEmpty() {
 		link.next = &link
 		link.prev = &link
 	} else {
-		link.next = chain
-		link.prev = chain.prev
-		chain.prev = &link
+		link.next = l.chain
+		link.prev = l.chain.prev
+		l.chain.prev = &link
 		link.prev.next = &link
 	}
-	chain = &link
+	l.chain = &link
 }
 
 // will return value, delete the link from the chain and return the function to add link back if some shit will happen
-func Pop() (value interface{}, f func()) {
-	defer LockMe()()
-	value = chain.value
-	chain.next.prev = chain.prev
-	chain.prev.next = chain.next
-	chain = chain.next
+func (l *Linker) Pop() (value interface{}, f func()) {
+	defer l.lockMe()()
+	value = l.chain.value
+	l.chain.next.prev = l.chain.prev
+	l.chain.prev.next = l.chain.next
+	l.chain = l.chain.next
 	return value, func() {
-		Push(value)
+		l.Push(value)
 	}
 }
 
-func CreateLinker(excludeSddn, excludeRmssd bool, startTime, endTime time.Time, periods map[string][]int) {
-	for method, timePeriods := range periods {
-		if (excludeSddn && method == "sddn") || (excludeRmssd && method == "rmssd") {
-			continue
-		}
-		for _, timePeriod := range timePeriods {
-			clearHours := timePeriod / 60
-			minutesLeft := timePeriod % 60
-			clearDays := clearHours / 24
-			hoursLeft := clearHours % 24
-			offset := time.Duration(timePeriod) * time.Minute
-			timeTagLine := fmt.Sprintf("%d%s%d%s%d%s", clearDays, "d", hoursLeft, "h", minutesLeft, "m")
-			for timeCounter := startTime; timeCounter.Before(endTime); timeCounter = timeCounter.Add(offset) {
-				Push([]string{
-					method, timeTagLine, tools.FormatTime(timeCounter), tools.FormatTime(timeCounter.Add(offset)),
-				})
-			}
-		}
-	}
-}
+func CreateLinker() *Linker { return &Linker{} }

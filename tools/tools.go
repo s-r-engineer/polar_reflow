@@ -149,3 +149,10 @@ func untar(src, dest, decompressor string) error {
 
 	return nil
 }
+
+func OpenFile(path string) ([]byte, error) {
+	reader, err := os.Open(path)
+	ErrPanic(err)
+
+	return io.ReadAll(reader)
+}

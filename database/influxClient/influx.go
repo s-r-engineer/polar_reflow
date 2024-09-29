@@ -55,10 +55,10 @@ func Flush() {
 	writerAPI.Flush()
 }
 
-func WritePPIPoint(deviceID string, pulseLength int, sampleTime time.Time) {
+func WritePPIPoint(pulseLength float64, sampleTime time.Time) {
 	writerAPI.WritePoint(influxdb2.NewPoint("ppi",
-		map[string]string{"device": deviceID},
-		map[string]interface{}{"ppi": float64(pulseLength)},
+		map[string]string{},
+		map[string]interface{}{"ppi": pulseLength},
 		sampleTime))
 }
 

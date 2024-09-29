@@ -1,0 +1,14 @@
+database:
+  mongo:
+    host: ""
+    user: ""
+    password: ""
+    database: ""
+    collection: ""
+  influx:
+    host: ""
+    token: ""
+    org: ""
+    bucket: ""
+api:
+  bindAddress: ""
