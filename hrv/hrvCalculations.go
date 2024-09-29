@@ -125,11 +125,19 @@ func Get5MinRMSSDFromtimeToTime(t1, t2 time.Time) []models.PPIFromInflux {
 		}
 	}
 	for _, v := range minutes {
+		if CheckAmountOfPoints(v, time.Duration(5*time.Minute)) {
 		r := RMSSD(v)
-		resultPoints = append(resultPoints, models.PPIFromInflux{Value: r, TimePoint: v[len(v)-1].TimePoint})
+		}
 	}
 	sort.Slice(resultPoints, func(i, j int) bool {
 		return resultPoints[i].TimePoint.Before(resultPoints[j].TimePoint)
 	})
 	return resultPoints
+}
+
+func CheckAmountOfPoints(rrIntervals []models.DBPPI, duration time.Duration) bool {
+	for i := range rrIntervals {
+		duration -= time.Duration(time.Millisecond * time.Duration(rrIntervals[i].Value))
+	}
+	return duration < time.Second*20
 }
