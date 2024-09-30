@@ -2,8 +2,8 @@ package mongoClient
 
 import (
 	"context"
+	"polar_reflow/logger"
 	"polar_reflow/models"
-	"polar_reflow/tools"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -24,13 +24,17 @@ func CreateClient(uri, database, coll string) {
 	globalCollection = coll
 	var err error
 	client, err = mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
-	tools.ErrPanic(err)
+	if err != nil {
+		logger.Error(err.Error())
+	}
 	granularity := "second"
 	err = client.Database(globalDatabase).CreateCollection(context.TODO(), globalCollection, &options.CreateCollectionOptions{TimeSeriesOptions: &options.TimeSeriesOptions{
 		TimeField:   "timePoint",
 		Granularity: &granularity,
 	}})
-	tools.ErrPanic(err)
+	if err != nil {
+		logger.Error(err.Error())
+	}
 	collection = client.Database(globalDatabase).Collection(globalCollection)
 }
 
@@ -42,12 +46,15 @@ func QueryPPI(startTime, endTime string) *mongo.Cursor {
 		},
 	}
 	cursor, err := collection.Find(context.TODO(), filter)
-
-	tools.ErrPanic(err)
+	if err != nil {
+		logger.Error(err.Error())
+	}
 	return cursor
 }
 
 func WritePPIPoint(ppi float64, sampleTime time.Time) {
 	_, err := collection.InsertOne(context.TODO(), models.DBPPI{Value: ppi, TimePoint: sampleTime})
-	tools.ErrPanic(err)
+	if err != nil {
+		logger.Error(err.Error())
+	}
 }

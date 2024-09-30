@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 package logger
 
 import (
@@ -9,9 +8,9 @@ import (
 )
 
 var (
-	Logger                      *zap.Logger
-	Error, Info, Warning, Debug func(string, ...zap.Field)
-	Infof                       func(template string, args ...interface{})
+	Logger                             *zap.Logger
+	Error, Info, Panic, Warning, Debug func(string, ...zap.Field)
+	Infof                              func(template string, args ...interface{})
 )
 
 func InitLogger(level string) {
@@ -30,6 +29,7 @@ func InitLogger(level string) {
 	Info = Logger.Info
 	Debug = Logger.Debug
 	Infof = Logger.Sugar().Infof
+	Panic = Logger.Panic
 }
 
 func LoggerForGin(c *gin.Context) {
@@ -43,18 +43,4 @@ func LoggerForGin(c *gin.Context) {
 		zap.String("client_ip", c.ClientIP()),
 		zap.Duration("latency", end.Sub(start)),
 	)
-=======
-package main
-
-import (
-	"go.uber.org/zap"
-)
-
-func main() {
-	logger, _ := zap.NewDevelopment()
-	config := zap.NewDevelopmentConfig()
-	config.Encoding
-	defer logger.Sync()
-	logger.Info("failed to fetch URL")
->>>>>>> d686776 (wip)
 }
