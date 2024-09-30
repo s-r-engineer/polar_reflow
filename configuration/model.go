@@ -6,30 +6,20 @@ type Config struct {
 	Engine   Engine   `yaml:"engine"`
 }
 
-type Mongo struct {
-	Host       string `yaml:"host" envconfig:""`
-	User       string `yaml:"user"`
-	Password   string `yaml:"password"`
-	Database   string `yaml:"database"`
-	Collection string `yaml:"collection"`
-}
-
-type Influx struct {
-	Host   string `yaml:"host"`
-	Token  string `yaml:"token"`
-	Org    string `yaml:"org"`
-	Bucket string `yaml:"bucket"`
-}
-
 type Database struct {
-	Mongo  Mongo  `yaml:"mongo"`
-	Influx Influx `yaml:"influx"`
+	DBType   string `yaml:"host" envconfig:"DB_TYPE"`
+	Host     string `yaml:"host" envconfig:"DB_HOST"`
+	Token    string `yaml:"token" envconfig:"DB_TOKEN"`
+	Database string `yaml:"org" envconfig:"DB_DATABASE"`
+	Table    string `yaml:"bucket" envconfig:"DB_TABLE"`
+	User     string `yaml:"user" envconfig:"DB_USER"`
+	Password string `yaml:"password" envconfig:"DB_PASSWORD"`
 }
 
 type API struct {
-	BindAddress string `yaml:"bindAddress"`
+	BindAddress string `yaml:"bindAddress" envconfig:"BIND_ADDRESS"`
 }
 
 type Engine struct {
-	Parallel int `yaml:"parallel"`
+	Parallel int `yaml:"parallel" envconfig:"PARALLELIZM"`
 }
