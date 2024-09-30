@@ -7,6 +7,7 @@ import (
 	"os"
 	"polar_reflow/hrv"
 	importData "polar_reflow/import"
+	"polar_reflow/logger"
 	"polar_reflow/tools"
 	"strconv"
 	"time"
@@ -15,7 +16,10 @@ import (
 )
 
 func Run() {
-	engine := gin.Default()
+	gin.DefaultWriter = logger.GinWriter{}
+    gin.DefaultErrorWriter = logger.GinErrWriter{}
+	engine := gin.New()
+	engine.Use(logger.LoggerForGin)
 	engine.Use(auth)
 	engine.PUT("/uploaddata", func(ctx *gin.Context) {
 		file, err := ctx.FormFile("file")
@@ -30,6 +34,7 @@ func Run() {
 		}
 		ctx.String(http.StatusOK, fmt.Sprintf("'%s' uploaded successfully!", file.Filename))
 		if err := tools.UnpackArchive(filePath, "/tmp/"); err != nil {
+			logger.Error(err.Error())
 			ctx.String(http.StatusInternalServerError, "Unable to unpack zip file: %s", err.Error())
 			return
 		}
@@ -55,7 +60,7 @@ func getRealHRVRMSSD(ctx *gin.Context) {
 	tools.Dumper(params)
 	tempValue := params.Get("from")
 	value, err := strconv.Atoi(tempValue)
-	tools.ErrPanic(err)
+	logger.Error(err.Error())
 	if value == 0 {
 		ctx.AbortWithError(512, fmt.Errorf(""))
 	}
@@ -66,10 +71,9 @@ func getRealHRVRMSSDMinByMin(ctx *gin.Context) {
 	params := ctx.Request.URL.Query()
 	tools.Dumper(params)
 	from, err := time.Parse(time.RFC3339, params.Get("from"))
-	tools.ErrPanic(err)
+	logger.Error(err.Error())
 	to, err := time.Parse(time.RFC3339, params.Get("to"))
-	tools.ErrPanic(err)
-
+	logger.Error(err.Error())
 	ctx.JSON(200, hrv.Get5MinRMSSDFromtimeToTime(from, to))
 }
 

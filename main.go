@@ -2,14 +2,13 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"os"
 	"polar_reflow/hrv"
 	importData "polar_reflow/import"
 	influxclient "polar_reflow/influxClient"
 	"polar_reflow/linker"
+	"polar_reflow/logger"
 	mygin "polar_reflow/myGin"
-	"polar_reflow/tools"
 	"time"
 )
 
@@ -30,7 +29,12 @@ var (
 	periods = map[string][]int{"sdnn": {2 * 60, 12 * 60, 24 * 60}, "rmssd": {5}}
 )
 
+func init() {
+	logger.InitLogger(os.Getenv("POLAR_REFLOW_DEPLOYMENT"))
+}
+
 func main() {
+	logger.Info("Starting")
 	flag.Parse()
 	influxclient.InitInflux(*influxAddress, *token, *org, *bucket)
 	if *reinit {
@@ -46,17 +50,17 @@ func main() {
 		return
 	}
 
-	fmt.Println("Starting calculations")
+	logger.Info("Starting calculations")
 
 	finalTimeO, err := time.Parse("2006-01-02T15:04:05Z07:00", *finaltime)
-	tools.ErrPanic(err)
+	logger.Error(err.Error())
 
 	startTime, err := time.Parse("2006-01-02T15:04:05Z07:00", *startTimeString)
-	tools.ErrPanic(err)
+	logger.Error(err.Error())
 
 	linker.CreateLinker(*excludeSddn, *excludeRmssd, startTime, finalTimeO, periods)
 	hrv.SpinHRVWorkers(*parallelismForCalculating)
 	influxclient.Flush()
 
-	fmt.Println("Done calculations")
+	logger.Info("Done calculations")
 }

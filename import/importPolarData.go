@@ -2,26 +2,25 @@ package importData
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
 	influxclient "polar_reflow/influxClient"
+	"polar_reflow/logger"
 	"polar_reflow/models"
 	"polar_reflow/syncronization"
-	"polar_reflow/tools"
 	"regexp"
 	"time"
 )
 
 func ImportFiles(pathToLookIn string) {
-	fmt.Println("Starting reading files")
+	logger.Info("Starting reading files")
 	absPath, err := filepath.Abs(pathToLookIn)
-	tools.ErrPanic(err)
+	logger.Error(err.Error())
 	aqquire, release := syncronization.CreateSemaphoreInstance(4)
 	add, done, wait := syncronization.CreateWGInstance()
-	tools.ErrPanic(filepath.WalkDir(absPath, func(path string, d fs.DirEntry, err error) error {
+	err = filepath.WalkDir(absPath, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -31,39 +30,40 @@ func ImportFiles(pathToLookIn string) {
 
 		return importFile(path, aqquire, release, add, done)
 	},
-	))
+	)
+	logger.Error(err.Error())
+
 	wait()
-	fmt.Println("flushing data")
+	logger.Info("flushing data")
 
 	influxclient.Flush()
 }
 
 func importFile(path string, aqquire func() error, release, add, done func()) error {
 	m, err := regexp.MatchString(`^.*ppi_.*\.json$`, filepath.Base(path))
-	tools.ErrPanic(err)
+	logger.Error(err.Error())
 	if !m {
 		return nil
 	}
 	add()
 	go func(path string) {
 		defer done()
-		tools.ErrPanic(aqquire())
-		tools.ErrPanic(err)
+		logger.Error(aqquire().Error())
 
 		defer release()
 
-		fmt.Printf("file %s parsing\n", path)
+		logger.Infof("file %s parsing\n", path)
 
 		reader, err := os.Open(path)
-		tools.ErrPanic(err)
+		logger.Error(err.Error())
 
 		data, err := io.ReadAll(reader)
-		tools.ErrPanic(err)
+		logger.Error(err.Error())
 
 		p := models.PPI{}
 
 		err = json.Unmarshal(data, &p)
-		tools.ErrPanic(err)
+		logger.Error(err.Error())
 
 		for _, pp := range p {
 			for _, DevicePpiSamplesList12 := range pp.DevicePpiSamplesList {
@@ -73,7 +73,7 @@ func importFile(path string, aqquire func() error, release, add, done func()) er
 				}
 			}
 		}
-		fmt.Printf("file %s done\n", path)
+		logger.Infof("file %s done\n", path)
 	}(path)
 	return nil
 }

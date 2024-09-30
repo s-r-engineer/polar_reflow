@@ -3,7 +3,7 @@ package influxclient
 import (
 	"context"
 	"fmt"
-	"polar_reflow/tools"
+	"polar_reflow/logger"
 	"time"
 
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
@@ -32,21 +32,23 @@ func InitInflux(influxAddress, token, org, bucket string) {
 }
 
 func ReinitBucket() {
-	fmt.Println("reinit starting")
+	logger.Info("reinit starting")
 	bucketAPI := client.BucketsAPI()
 	orgAPI := client.OrganizationsAPI()
-	o, e := orgAPI.FindOrganizationByName(context.Background(), globalOrg)
-	tools.ErrPanic(e)
+	o, err := orgAPI.FindOrganizationByName(context.Background(), globalOrg)
+	logger.Error(err.Error())
 
-	b, e := bucketAPI.FindBucketByName(context.Background(), globalBucket)
-	if e == nil {
-		tools.ErrPanic(bucketAPI.DeleteBucket(context.Background(), b))
+	b, err := bucketAPI.FindBucketByName(context.Background(), globalBucket)
+	if err == nil {
+		err = bucketAPI.DeleteBucket(context.Background(), b)
+		if err != nil {
+			logger.Error(err.Error())
+		}
 	}
 
-	_, e = bucketAPI.CreateBucket(context.Background(), &domain.Bucket{OrgID: o.Id, Name: globalBucket})
-	tools.ErrPanic(e)
-
-	fmt.Println("reinit done")
+	_, err = bucketAPI.CreateBucket(context.Background(), &domain.Bucket{OrgID: o.Id, Name: globalBucket})
+	logger.Error(err.Error())
+	logger.Info("reinit done")
 }
 
 func Flush() {
@@ -73,6 +75,6 @@ func QueryPPI(startTime, endTime string) *api.QueryTableResult {
 		startTime,
 		endTime)
 	response, err := queryAPI.Query(context.Background(), q)
-	tools.ErrPanic(err)
+	logger.Error(err.Error())
 	return response
 }
