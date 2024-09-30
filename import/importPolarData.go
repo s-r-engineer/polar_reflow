@@ -6,7 +6,6 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	influxclient "polar_reflow/influxClient"
 	"polar_reflow/logger"
 
 	"polar_reflow/database"
@@ -20,10 +19,12 @@ import (
 func ImportFiles(pathToLookIn string) {
 	logger.Info("Starting reading files")
 	absPath, err := filepath.Abs(pathToLookIn)
-	logger.Error(err.Error())
+	if err != nil {
+		logger.Error(err.Error())
+	}
 	aqquire, release := syncronization.CreateSemaphoreInstance(4)
 	add, done, wait := syncronization.CreateWGInstance()
-	tools.ErrPanic(filepath.WalkDir(absPath, func(path string, d fs.DirEntry, err error) error {
+	err = filepath.WalkDir(absPath, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -32,10 +33,10 @@ func ImportFiles(pathToLookIn string) {
 		}
 
 		return importFile(path, aqquire, release, add, done)
-	},
-	)
-	logger.Error(err.Error())
-
+	})
+	if err != nil {
+		logger.Error(err.Error())
+	}
 	wait()
 	logger.Info("flushing data")
 
@@ -58,15 +59,21 @@ func importFile(path string, aqquire func() error, release, add, done func()) er
 		logger.Infof("file %s parsing\n", path)
 
 		reader, err := os.Open(path)
-		logger.Error(err.Error())
+		if err != nil {
+			logger.Error(err.Error())
+		}
 
 		data, err := io.ReadAll(reader)
-		logger.Error(err.Error())
+		if err != nil {
+			logger.Error(err.Error())
+		}
 
 		p := models.PPI{}
 
 		err = json.Unmarshal(data, &p)
-		logger.Error(err.Error())
+		if err != nil {
+			logger.Error(err.Error())
+		}
 
 		for _, pp := range p {
 			for _, DevicePpiSamplesList12 := range pp.DevicePpiSamplesList {

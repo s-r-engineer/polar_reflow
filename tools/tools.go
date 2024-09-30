@@ -152,7 +152,8 @@ func untar(src, dest, decompressor string) error {
 
 func OpenFile(path string) ([]byte, error) {
 	reader, err := os.Open(path)
-	ErrPanic(err)
-
+	if err != nil {
+		logger.Error(err.Error())
+	}
 	return io.ReadAll(reader)
 }
