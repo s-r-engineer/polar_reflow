@@ -2,8 +2,11 @@ package database
 
 import (
 	"context"
+	"fmt"
+	"polar_reflow/configuration"
 	influxclient "polar_reflow/database/influxClient"
 	"polar_reflow/database/mongoClient"
+	"polar_reflow/logger"
 	"polar_reflow/models"
 	"polar_reflow/tools"
 
@@ -19,10 +22,10 @@ type DB interface {
 	Read(time.Time, time.Time) []models.DBPPI
 }
 
-func InitDB(dbType, address, tokenIfInflux, dbOrOrg, bucketOrCollection string) {
-	switch dbType {
+func InitDB(dbConfig configuration.Database) {
+	switch dbConfig.DBType {
 	case "influx":
-		influxclient.InitInflux(address, tokenIfInflux, dbOrOrg, bucketOrCollection)
+		influxclient.InitInflux(dbConfig.Host, dbConfig.Token, dbConfig.Database, dbConfig.Table)
 		Write = func(d models.DBPPI) {
 			influxclient.WritePPIPoint(d.Value, d.TimePoint)
 		}
@@ -37,13 +40,16 @@ func InitDB(dbType, address, tokenIfInflux, dbOrOrg, bucketOrCollection string) 
 		Flush = influxclient.Flush
 
 	case "mongo":
-		mongoClient.CreateClient(address, dbOrOrg, bucketOrCollection)
+		mongoClient.CreateClient(fmt.Sprintf("mongodb://%s:%s@%s", dbConfig.User, dbConfig.Password, dbConfig.Host), dbConfig.Database, dbConfig.Table)
 		Write = func(d models.DBPPI) {
 			mongoClient.WritePPIPoint(d.Value, d.TimePoint)
 		}
 		Get = func(t1, t2 time.Time) (result []models.DBPPI) {
 			cursor := mongoClient.QueryPPI(tools.FormatTime(t1), tools.FormatTime(t2))
-			tools.ErrPanic(cursor.All(context.TODO(), &result))
+			err := cursor.All(context.TODO(), &result)
+			if err != nil {
+				logger.Error(err.Error())
+			}
 			return
 		}
 		Flush = func() {}
