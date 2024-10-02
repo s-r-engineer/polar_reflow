@@ -25,9 +25,7 @@ func ImportFiles(pathToLookIn string) {
 	aqquire, release := syncronization.CreateSemaphoreInstance(4)
 	add, done, wait := syncronization.CreateWGInstance()
 	err = filepath.WalkDir(absPath, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
+
 		if d.IsDir() {
 			return nil
 		}
@@ -45,15 +43,20 @@ func ImportFiles(pathToLookIn string) {
 
 func importFile(path string, aqquire func() error, release, add, done func()) error {
 	m, err := regexp.MatchString(`^.*ppi_.*\.json$`, filepath.Base(path))
-	logger.Error(err.Error())
+	if err != nil {
+		return err
+	}
 	if !m {
 		return nil
 	}
 	add()
 	go func(path string) {
 		defer done()
-		logger.Error(aqquire().Error())
-
+		err := aqquire()
+		if err != nil {
+			logger.Error(err.Error())
+			return
+		}
 		defer release()
 
 		logger.Infof("file %s parsing\n", path)
@@ -83,6 +86,7 @@ func importFile(path string, aqquire func() error, release, add, done func()) er
 				}
 			}
 		}
+		database.Flush()
 		logger.Infof("file %s done\n", path)
 	}(path)
 	return nil

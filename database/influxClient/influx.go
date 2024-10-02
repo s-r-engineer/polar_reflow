@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"polar_reflow/logger"
+	"polar_reflow/models"
 	"time"
 
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
@@ -55,11 +56,11 @@ func Flush() {
 	writerAPI.Flush()
 }
 
-func WritePPIPoint(pulseLength float64, sampleTime time.Time) {
+func WritePPIPoint(d models.DBPPI) {
 	writerAPI.WritePoint(influxdb2.NewPoint("ppi",
 		map[string]string{},
-		map[string]interface{}{"ppi": pulseLength},
-		sampleTime))
+		map[string]interface{}{"ppi": d.Value},
+		d.TimePoint))
 }
 
 func WriteHRVPoint(timeTag, method string, data float64, startTime time.Time) {
@@ -75,6 +76,8 @@ func QueryPPI(startTime, endTime string) *api.QueryTableResult {
 		startTime,
 		endTime)
 	response, err := queryAPI.Query(context.Background(), q)
-	logger.Error(err.Error())
+	if err != nil {
+		logger.Error(err.Error())
+	}
 	return response
 }

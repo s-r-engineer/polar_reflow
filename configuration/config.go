@@ -8,12 +8,13 @@ import (
 const EnvPrefix = "POLAR_REFLOW_"
 
 func Configure() (c Config) {
-	c.Database.DBType = "mongo"
-	c.Database.Host = "mongodb:27017"
+	c.Database.DBType = "influx"
+	c.Database.Host = "localhost:8086"
 	c.Database.Database = "polar_reflow"
 	c.Database.Table = "hrv"
 	c.Database.User = "polar_reflow"
 	c.Database.Password = "polar_reflow"
+	c.Database.Token = "sdwefrejktkyukytjrjtrw"
 	c.API = API{BindAddress: "0.0.0.0:6969"}
 	c.Engine = Engine{Parallel: 16}
 	return parseEnv(c)

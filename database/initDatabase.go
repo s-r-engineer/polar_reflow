@@ -1,11 +1,9 @@
 package database
 
 import (
-	"context"
 	"fmt"
 	"polar_reflow/configuration"
-	influxclient "polar_reflow/database/influxClient"
-	"polar_reflow/database/mongoClient"
+	"polar_reflow/database/influxClient"
 	"polar_reflow/logger"
 	"polar_reflow/models"
 	"polar_reflow/tools"
@@ -25,9 +23,9 @@ type DB interface {
 func InitDB(dbConfig configuration.Database) {
 	switch dbConfig.DBType {
 	case "influx":
-		influxclient.InitInflux(dbConfig.Host, dbConfig.Token, dbConfig.Database, dbConfig.Table)
+		influxclient.InitInflux(fmt.Sprintf("http://%s", dbConfig.Host), dbConfig.Token, dbConfig.Database, dbConfig.Table)
 		Write = func(d models.DBPPI) {
-			influxclient.WritePPIPoint(d.Value, d.TimePoint)
+			influxclient.WritePPIPoint(d)
 		}
 		Get = func(t1, t2 time.Time) (result []models.DBPPI) {
 			cursor := influxclient.QueryPPI(tools.FormatTime(t1), tools.FormatTime(t2))
@@ -40,21 +38,23 @@ func InitDB(dbConfig configuration.Database) {
 		Flush = influxclient.Flush
 
 	case "mongo":
-		mongoClient.CreateClient(fmt.Sprintf("mongodb://%s:%s@%s", dbConfig.User, dbConfig.Password, dbConfig.Host), dbConfig.Database, dbConfig.Table)
-		Write = func(d models.DBPPI) {
-			mongoClient.WritePPIPoint(d.Value, d.TimePoint)
-		}
-		Get = func(t1, t2 time.Time) (result []models.DBPPI) {
-			cursor := mongoClient.QueryPPI(tools.FormatTime(t1), tools.FormatTime(t2))
-			err := cursor.All(context.TODO(), &result)
-			if err != nil {
-				logger.Error(err.Error())
-			}
-			return
-		}
-		Flush = func() {}
-	default:
+		logger.Warning("Mongo is not in operable state. Choose Influx instead")
 		return
+		//mongoClient.CreateClient(fmt.Sprintf("mongodb://%s:%s@%s", dbConfig.User, dbConfig.Password, dbConfig.Host), dbConfig.Database, dbConfig.Table)
+		//Write = func(d models.DBPPI) {
+		//	mongoClient.WritePPIPoints(d)
+		//}
+		//Get = func(t1, t2 time.Time) (result []models.DBPPI) {
+		//	cursor := mongoClient.QueryPPI(tools.FormatTime(t1), tools.FormatTime(t2))
+		//	err := cursor.All(context.TODO(), &result)
+		//	if err != nil {
+		//		logger.Error(err.Error())
+		//	}
+		//	return
+		//}
+		//Flush = mongoClient.Flush
+	default:
+		logger.Panic("No database selected")
 	}
 }
 

@@ -22,5 +22,11 @@ type PpiSamples struct {
 
 type DBPPI struct {
 	Value     float64
+	TimePoint time.Time
+}
+
+type MongoDBPPI struct {
+	Value     float64   `bson:"value"`
 	TimePoint time.Time `bson:"timePoint"`
+	ID        string    `bson:"_id"`
 }

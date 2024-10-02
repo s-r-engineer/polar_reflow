@@ -17,7 +17,7 @@ import (
 
 func Run() {
 	gin.DefaultWriter = logger.GinWriter{}
-    gin.DefaultErrorWriter = logger.GinErrWriter{}
+	gin.DefaultErrorWriter = logger.GinErrWriter{}
 	engine := gin.New()
 	engine.Use(logger.LoggerForGin)
 	engine.Use(auth)
@@ -33,7 +33,7 @@ func Run() {
 			return
 		}
 		ctx.String(http.StatusOK, fmt.Sprintf("'%s' uploaded successfully!", file.Filename))
-		if err := tools.UnpackArchive(filePath, "/tmp/"); err != nil {
+		if err := tools.UnpackArchive(filePath, "/tmp/uploaded"); err != nil {
 			logger.Error(err.Error())
 			ctx.String(http.StatusInternalServerError, "Unable to unpack zip file: %s", err.Error())
 			return
@@ -41,7 +41,7 @@ func Run() {
 
 		// Optionally, delete the temp file after extraction
 		os.Remove(filePath)
-		importData.ImportFiles("/tmp")
+		importData.ImportFiles("/tmp/uploaded")
 	})
 	engine.GET("/hrv/last5min", getRealHRVRMSSD)
 	engine.GET("/hrv/5minforperiod", getRealHRVRMSSDMinByMin)
