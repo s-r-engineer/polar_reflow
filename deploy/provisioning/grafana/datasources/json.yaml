@@ -11,5 +11,7 @@ datasources:
     isDefault: true
     jsonData:
       global_queries: []
-    readOnly: false
+      timeoutInSeconds: 600
+      tlsSkipVerify: true
+    readOnly: true
     apiVersion: ""

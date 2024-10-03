@@ -70,11 +70,11 @@ func WriteHRVPoint(timeTag, method string, data float64, startTime time.Time) {
 		startTime))
 }
 
-func QueryPPI(startTime, endTime string) *api.QueryTableResult {
-	q := fmt.Sprintf(`from(bucket:"%s")|> range(start: %sZ, stop: %sZ) |> filter(fn: (r) => r._measurement == "ppi")`,
+func QueryPPI(startTime, endTime string, offset int, limit int) *api.QueryTableResult {
+	q := fmt.Sprintf(`from(bucket:"%s")|> range(start: %sZ, stop: %sZ) |> filter(fn: (r) => r._measurement == "ppi" ) |> limit(n: %d, offset: %d)`,
 		globalBucket,
 		startTime,
-		endTime)
+		endTime, limit, offset)
 	response, err := queryAPI.Query(context.Background(), q)
 	if err != nil {
 		logger.Error(err.Error())

@@ -9,7 +9,7 @@ const EnvPrefix = "POLAR_REFLOW_"
 
 func Configure() (c Config) {
 	c.Database.DBType = "influx"
-	c.Database.Host = "localhost:8086"
+	c.Database.Host = "influx:8086"
 	c.Database.Database = "polar_reflow"
 	c.Database.Table = "hrv"
 	c.Database.User = "polar_reflow"

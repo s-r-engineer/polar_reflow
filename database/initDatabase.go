@@ -11,14 +11,11 @@ import (
 	"time"
 )
 
-var Write func(models.DBPPI)
-var Get func(time.Time, time.Time) []models.DBPPI
-var Flush func()
+const queryLimit = 1000000
 
-type DB interface {
-	Write(models.DBPPI)
-	Read(time.Time, time.Time) []models.DBPPI
-}
+var Write func(models.DBPPI)
+var Get func(time.Time, time.Time, chan models.DBPPI) []models.DBPPI
+var Flush func()
 
 func InitDB(dbConfig configuration.Database) {
 	switch dbConfig.DBType {
@@ -27,12 +24,27 @@ func InitDB(dbConfig configuration.Database) {
 		Write = func(d models.DBPPI) {
 			influxclient.WritePPIPoint(d)
 		}
-		Get = func(t1, t2 time.Time) (result []models.DBPPI) {
-			cursor := influxclient.QueryPPI(tools.FormatTime(t1), tools.FormatTime(t2))
-			for cursor.Next() {
-				result = append(result, models.DBPPI{Value: cursor.Record().Value().(float64), TimePoint: cursor.Record().Time()})
+		Get = func(t1, t2 time.Time, c chan models.DBPPI) (result []models.DBPPI) {
+			var counter int
+			defer close(c)
+			for {
+				//logger.Infof("%d", counter)
+				start := counter
+				cursor := influxclient.QueryPPI(tools.FormatTime(t1), tools.FormatTime(t2), start, queryLimit)
+				for cursor.Next() {
+					if c != nil {
+						c <- models.DBPPI{Value: cursor.Record().Value().(float64), TimePoint: cursor.Record().Time()}
+					} else {
+						result = append(result, models.DBPPI{Value: cursor.Record().Value().(float64), TimePoint: cursor.Record().Time()})
+					}
+					counter++
+				}
+				cursor.Close()
+				if counter-start < queryLimit {
+					break
+				}
 			}
-			cursor.Close()
+			logger.Infof("---%d---", counter)
 			return
 		}
 		Flush = influxclient.Flush
@@ -58,6 +70,6 @@ func InitDB(dbConfig configuration.Database) {
 	}
 }
 
-func GetWithTimeAsString(t1, t2 string) []models.DBPPI {
-	return Get(tools.ParseTime(t1), tools.ParseTime(t2))
-}
+//func GetWithTimeAsString(t1, t2 string) []models.DBPPI {
+//	return Get(tools.ParseTime(t1), tools.ParseTime(t2), nil)
+//}

@@ -69,11 +69,14 @@ func getRealHRVRMSSD(ctx *gin.Context) {
 
 func getRealHRVRMSSDMinByMin(ctx *gin.Context) {
 	params := ctx.Request.URL.Query()
-	tools.Dumper(params)
 	from, err := time.Parse(time.RFC3339, params.Get("from"))
-	logger.Error(err.Error())
+	if err != nil {
+		logger.Error(err.Error())
+	}
 	to, err := time.Parse(time.RFC3339, params.Get("to"))
-	logger.Error(err.Error())
+	if err != nil {
+		logger.Error(err.Error())
+	}
 	ctx.JSON(200, hrv.Get5MinRMSSDFromtimeToTime(from, to))
 }
 
