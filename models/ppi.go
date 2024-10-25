@@ -15,7 +15,7 @@ type DevicePpiSamplesList struct {
 }
 
 type PpiSamples struct {
-	SampleDateTime polarTime `json:"sampleDateTime"`
+	SampleDateTime polarTimeForPPI `json:"sampleDateTime"`
 	TimeWithPulse  time.Time
 	PulseLength    int `json:"pulseLength"`
 }

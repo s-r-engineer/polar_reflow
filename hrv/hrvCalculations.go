@@ -1,10 +1,12 @@
 package hrv
 
 import (
+	"github.com/gin-gonic/gin"
 	"math"
 	"polar_reflow/database"
 	influxclient "polar_reflow/database/influxClient"
 	"polar_reflow/linker"
+	"polar_reflow/logger"
 	"polar_reflow/models"
 	"polar_reflow/syncronization"
 	"polar_reflow/tools"
@@ -62,7 +64,7 @@ func hrvWorker(done func(), pop func() (any, func())) {
 		timeTag := option[1]
 		startTime := option[2]
 		endTime := option[3]
-		result := database.Get(tools.ParseTime(startTime), tools.ParseTime(endTime), nil)
+		result := database.GetPPI(tools.ParseTime(startTime), tools.ParseTime(endTime), nil)
 		createHRVPoint(method, startTime, timeTag, result)
 	}
 }
@@ -94,7 +96,7 @@ func SpinHRVWorkers(parallelism int, linker *linker.Linker) {
 
 func Get5MinRMSSDFromPoint(t int) float64 {
 	//timePoint := time.Unix(int64(t/1000), 0)
-	//result := database.Get(timePoint.Add(time.Minute*-5), timePoint)
+	//result := database.GetPPI(timePoint.Add(time.Minute*-5), timePoint)
 	//return RMSSD(result)
 	return 0
 }
@@ -146,29 +148,9 @@ func Get5MinRMSSDFromtimeToTime(t1, t2 time.Time) (resultPoints []models.DBPPI) 
 			adder(value.Interface().(models.DBPPI))
 		}
 	}()
-	//for {
-	//	select {
-	//	case result := <-resultChannel[0]:
-	//	case result := <-resultChannel[2]:
-	//	case result := <-resultChannel[3]:
-	//	case result := <-resultChannel[4]:
-	//	case result := <-resultChannel[5]:
-	//	case result := <-resultChannel[6]:
-	//	case result := <-resultChannel[7]:
-	//	case result := <-resultChannel[8]:
-	//	case result := <-resultChannel[9]:
-	//	case result := <-resultChannel[10]:
-	//	case result := <-resultChannel[11]:
-	//	case result := <-resultChannel[12]:
-	//	case result := <-resultChannel[13]:
-	//	case result := <-resultChannel[14]:
-	//	case result := <-resultChannel[15]:
-	//		adder(result)
-	//	}
-	//}
 
 	channel := make(chan models.DBPPI, 700000)
-	go database.Get(t1, t2, channel)
+	go database.GetPPI(t1, t2, channel)
 	minutes := make(map[int][]models.DBPPI)
 
 	// TODO fix this. Point must be counted
@@ -176,7 +158,6 @@ func Get5MinRMSSDFromtimeToTime(t1, t2 time.Time) (resultPoints []models.DBPPI) 
 	if !ok {
 		return
 	}
-	//aqq, release := syncronization.CreateMutexInstance()
 	startPoint := val.TimePoint
 	for {
 		val, ok = <-channel
@@ -216,4 +197,17 @@ func CheckAmountOfPoints(rrIntervals []models.DBPPI, duration time.Duration) boo
 		duration -= time.Duration(time.Millisecond * time.Duration(rrIntervals[i].Value))
 	}
 	return duration < time.Second*20
+}
+
+func GetRealHRVRMSSDMinByMin(ctx *gin.Context) {
+	params := ctx.Request.URL.Query()
+	from, err := time.Parse(time.RFC3339, params.Get("from"))
+	if err != nil {
+		logger.Error(err.Error())
+	}
+	to, err := time.Parse(time.RFC3339, params.Get("to"))
+	if err != nil {
+		logger.Error(err.Error())
+	}
+	ctx.JSON(200, Get5MinRMSSDFromtimeToTime(from, to))
 }
