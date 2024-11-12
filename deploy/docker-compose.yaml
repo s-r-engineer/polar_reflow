@@ -29,17 +29,17 @@ services:
       - ./provisioning/grafana/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml
       - ./provisioning/grafana/dashboards/hrv.json:/var/lib/grafana/dashboards/hrv.json
 
-  polar_reflow:
-    build: ../
-    ports:
-      - "6969:6969"
-    environment:
-      - POLAR_REFLOW_SERVE=true
-      - POLAR_REFLOW_TOKEN=sdwefrejktkyukytjrjtrw
-      - POLAR_REFLOW_ORG=polar_reflow
-      - POLAR_REFLOW_BUCKET=hrv
-    depends_on:
-      - influx
+#  polar_reflow:
+#    build: ../
+#    ports:
+#      - "6969:6969"
+#    environment:
+#      - POLAR_REFLOW_SERVE=true
+#      - POLAR_REFLOW_TOKEN=sdwefrejktkyukytjrjtrw
+#      - POLAR_REFLOW_ORG=polar_reflow
+#      - POLAR_REFLOW_BUCKET=hrv
+#    depends_on:
+#      - influx
 
 
 #  mongodb:

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/google/uuid"
 	"time"
 )
 
@@ -22,6 +23,12 @@ type PpiSamples struct {
 
 type DBPPI struct {
 	Value     float64
+	TimePoint time.Time
+}
+
+type BTHR struct {
+	Session   uuid.UUID
+	Value     uint16
 	TimePoint time.Time
 }
 
