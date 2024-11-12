@@ -1,8 +1,8 @@
 FROM golang AS builder
 WORKDIR /build
-COPY ./go.mod /build/go.mod
+#COPY ./go.mod /build/go.mod
 # COPY ./go.mod /build/go.sum
-RUN go mod download
+#RUN go mod download
 COPY . /build/
 RUN go build -o ./polar_reflow main.go
 
