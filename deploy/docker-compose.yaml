@@ -27,7 +27,7 @@ services:
       - ./deploymentData/grafana/data:/var/lib/grafana
       - ./provisioning/grafana/datasources:/etc/grafana/provisioning/datasources/
       - ./provisioning/grafana/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml
-      - ./provisioning/grafana/dashboards/hrv.json:/var/lib/grafana/dashboards/hrv.json
+      - ./provisioning/grafana/dashboards:/var/lib/grafana/dashboards
 
   polar_reflow:
     build: ../

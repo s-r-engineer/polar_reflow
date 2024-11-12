@@ -55,7 +55,7 @@
     {
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "${DS_JSON}"
+        "uid": "cdyz9gotagfeoc"
       },
       "fieldConfig": {
         "defaults": {
