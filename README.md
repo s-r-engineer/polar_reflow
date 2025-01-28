@@ -1,3 +1,5 @@
+Project is archived due to absolutely shitty raw data from Polar
+
 # Polar reflow
 
 Current state: **alpha / POC**
